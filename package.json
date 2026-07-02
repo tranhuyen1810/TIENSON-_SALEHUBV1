@@ -55,8 +55,7 @@
       "target": [
         "nsis",
         "portable"
-      ],
-      "publisherName": "TIENSON"
+      ]
     },
     "nsis": {
       "oneClick": false,
