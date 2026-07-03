@@ -26,6 +26,12 @@ Ung dung desktop quan ly quy trinh don hang va xuat kho theo luong can xe vao/ra
   - Dieu phoi va chuyen trang thai don
 - Role employee:
   - Dang nhap va thao tac nghiep vu don hang theo quyen duoc cap
+- Bo phan employee ho tro:
+  - accounting
+  - driver
+  - warehouse
+  - security
+  - summary
 
 Tai khoan seed:
 - boss / boss123
@@ -63,6 +69,14 @@ Trang thai don hang chinh:
 - SECURITY_CHECKED
 - COMPLETED
 
+## Nghiep vu da duoc app hoa
+
+- Tao don voi cac truong phu hop tong hop bao cao: ma khach hang, ten khach hang, bien so xe, chung loai, so luong, ngay giao, kho, phieu nhan don, phieu xuat kho, ghi chu.
+- Ghi nhan phieu can vao, phieu can ra va khoi luong can vao/ra theo tung buoc.
+- Tu dong tinh khối luong doi chieu xe vao/ra de phuc vu tong hop.
+- Luu nhat ky workflow trong bang workflow_events de truy vet thao tac.
+- Phan quyen chuyen trang thai theo bo phan; boss co the dieu phoi toan bo.
+
 ## Cong nghe & ngon ngu su dung
 
 - Ngon ngu: TypeScript, JavaScript, SQL, HTML, CSS
@@ -87,6 +101,8 @@ npm run dist:win
 
 Artifact duoc tao trong thu muc release.
 
+Luu y: dong goi `.exe` can duoc thuc hien tren Windows CI trong workflow release de dam bao NSIS/Portable on dinh.
+
 ## Phat hanh GitHub Release
 
 Workflow: .github/workflows/release-win.yml
@@ -100,6 +116,12 @@ Workflow: .github/workflows/release-win.yml
   - Tao tag
   - Tao GitHub Release
   - Upload release assets
+
+Co the trigger bang GitHub CLI:
+
+```bash
+gh workflow run release-win.yml -f version=v1.0.0 -f prerelease=false
+```
 
 ## Metadata phat hanh
 
