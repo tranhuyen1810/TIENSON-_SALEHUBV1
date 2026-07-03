@@ -10,6 +10,9 @@ on:
         description: "Publish as prerelease"
         required: true
         default: "false"
+  push:
+    tags:
+      - "v*.*.*"
 
 permissions:
   contents: write
@@ -17,6 +20,9 @@ permissions:
 jobs:
   build-and-release:
     runs-on: windows-latest
+    env:
+      RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
+      RELEASE_PRERELEASE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.prerelease || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,7 +39,7 @@ jobs:
       - name: Validate version format
         shell: bash
         run: |
-          if [[ ! "${{ github.event.inputs.version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ! "$RELEASE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Version must follow semantic versioning: vMajor.Minor.Patch"
             exit 1
           fi
@@ -41,7 +47,7 @@ jobs:
       - name: Set package version
         shell: bash
         run: |
-          VERSION_NO_V=${{ github.event.inputs.version }}
+          VERSION_NO_V=$RELEASE_VERSION
           VERSION_NO_V=${VERSION_NO_V#v}
           npm version "$VERSION_NO_V" --no-git-tag-version
 
@@ -52,29 +58,30 @@ jobs:
         id: notes
         shell: bash
         run: |
-          node scripts/release-notes.mjs "${{ github.event.inputs.version }}" > RELEASE_NOTES.md
+          node scripts/release-notes.mjs "$RELEASE_VERSION" > RELEASE_NOTES.md
           echo "release_notes<<EOF" >> $GITHUB_OUTPUT
           cat RELEASE_NOTES.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create tag
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json package-lock.json
-          git commit -m "chore(release): prepare ${{ github.event.inputs.version }}" || true
-          git tag -a "${{ github.event.inputs.version }}" -m "Release ${{ github.event.inputs.version }}"
+          git commit -m "chore(release): prepare $RELEASE_VERSION" || true
+          git tag -a "$RELEASE_VERSION" -m "Release $RELEASE_VERSION"
           git push origin HEAD:${{ github.ref_name }} --follow-tags
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.version }}
-          name: TIENSON SALEHUB ${{ github.event.inputs.version }}
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: TIENSON SALEHUB ${{ env.RELEASE_VERSION }}
           body: ${{ steps.notes.outputs.release_notes }}
           draft: false
-          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          prerelease: ${{ env.RELEASE_PRERELEASE == 'true' }}
           files: |
             release/*.exe
             release/*.yml
