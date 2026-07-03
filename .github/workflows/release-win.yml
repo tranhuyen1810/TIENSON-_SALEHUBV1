@@ -49,7 +49,7 @@ jobs:
         run: |
           VERSION_NO_V=$RELEASE_VERSION
           VERSION_NO_V=${VERSION_NO_V#v}
-          npm version "$VERSION_NO_V" --no-git-tag-version
+          node -e "const fs=require('fs'); const version=process.argv[1]; for (const file of ['package.json','package-lock.json']) { const json=JSON.parse(fs.readFileSync(file,'utf8')); json.version=version; if (file === 'package-lock.json' && json.packages?.['']) { json.packages[''].version=version; } fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n'); }" "$VERSION_NO_V"
 
       - name: Build and package
         run: npm run dist:win
