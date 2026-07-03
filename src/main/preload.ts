@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
-import type { UserRole } from "../shared/types";
+import type { Department, UserRole } from "../shared/types";
 
 contextBridge.exposeInMainWorld("salehub", {
   appInfo: () => ipcRenderer.invoke("app:info"),
@@ -10,13 +10,19 @@ contextBridge.exposeInMainWorld("salehub", {
   auth: {
     login: (username: string, password: string) => ipcRenderer.invoke("auth:login", username, password),
     listAccounts: () => ipcRenderer.invoke("auth:list-accounts"),
-    createAccount: (username: string, displayName: string, password: string, role: UserRole) =>
-      ipcRenderer.invoke("auth:create-account", username, displayName, password, role)
+    createAccount: (
+      username: string,
+      displayName: string,
+      password: string,
+      role: UserRole,
+      department: Department | null
+    ) => ipcRenderer.invoke("auth:create-account", username, displayName, password, role, department)
   },
   orders: {
     list: () => ipcRenderer.invoke("orders:list"),
     create: (payload: any) => ipcRenderer.invoke("orders:create", payload),
-    advance: (payload: any) => ipcRenderer.invoke("orders:advance", payload)
+    advance: (payload: any) => ipcRenderer.invoke("orders:advance", payload),
+    history: (orderId: number) => ipcRenderer.invoke("orders:history", orderId)
   }
 });
 
@@ -35,13 +41,15 @@ declare global {
           username: string,
           displayName: string,
           password: string,
-          role: UserRole
+          role: UserRole,
+          department: Department | null
         ) => Promise<any>;
       };
       orders: {
         list: () => Promise<any[]>;
         create: (payload: any) => Promise<any>;
         advance: (payload: any) => Promise<any>;
+        history: (orderId: number) => Promise<any[]>;
       };
     };
   }

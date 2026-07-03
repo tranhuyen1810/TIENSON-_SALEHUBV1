@@ -3,7 +3,7 @@ import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { dbRuntime } from "./db/storage";
 import { migrate } from "./db/schema";
 import { createAccount, ensureSeedAccounts, listAccounts, login } from "./services/auth";
-import { createOrder, listOrders, updateOrderStatus } from "./services/orders";
+import { createOrder, listOrders, listWorkflowEvents, updateOrderStatus } from "./services/orders";
 import { startApiServer, stopApiServer } from "./services/server";
 
 const isDev = process.env.NODE_ENV === "development";
@@ -61,15 +61,20 @@ function registerIpcHandlers(): void {
   ipcMain.handle("auth:list-accounts", () => listAccounts());
   ipcMain.handle(
     "auth:create-account",
-    (_event, username: string, displayName: string, password: string, role: "boss" | "employee") =>
-      createAccount(username, displayName, password, role)
+    (
+      _event,
+      username: string,
+      displayName: string,
+      password: string,
+      role: "boss" | "employee",
+      department: "accounting" | "driver" | "warehouse" | "security" | "summary" | null
+    ) => createAccount(username, displayName, password, role, department)
   );
 
   ipcMain.handle("orders:list", () => listOrders());
   ipcMain.handle("orders:create", (_event, payload) => createOrder(payload));
-  ipcMain.handle("orders:advance", (_event, payload) =>
-    updateOrderStatus(payload.orderId, payload.status, payload.actorId, payload.note, payload.metrics)
-  );
+  ipcMain.handle("orders:advance", (_event, payload) => updateOrderStatus(payload));
+  ipcMain.handle("orders:history", (_event, orderId: number) => listWorkflowEvents(orderId));
 }
 
 app.whenReady().then(() => {

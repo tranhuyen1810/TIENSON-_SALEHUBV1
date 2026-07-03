@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { dbRuntime } from "../db/storage";
-import type { Account, UserRole } from "../../shared/types";
+import type { Account, Department, UserRole } from "../../shared/types";
 
 function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
@@ -12,6 +12,7 @@ function toAccount(row: any): Account {
     username: row.username,
     displayName: row.display_name,
     role: row.role,
+    department: row.department,
     isActive: row.is_active,
     createdAt: row.created_at
   };
@@ -25,11 +26,11 @@ export function ensureSeedAccounts(): void {
   }
 
   const insert = db.prepare(
-    "INSERT INTO accounts (username, display_name, password_hash, role) VALUES (?, ?, ?, ?)"
+    "INSERT INTO accounts (username, display_name, password_hash, role, department) VALUES (?, ?, ?, ?, ?)"
   );
 
-  insert.run("boss", "Boss quản lý", hashPassword("boss123"), "boss");
-  insert.run("nhanvien", "Nhân viên kế toán", hashPassword("nv123"), "employee");
+  insert.run("boss", "Boss quản lý", hashPassword("boss123"), "boss", null);
+  insert.run("nhanvien", "Nhân viên kế toán", hashPassword("nv123"), "employee", "accounting");
 }
 
 export function login(username: string, password: string): Account | null {
@@ -51,14 +52,15 @@ export function createAccount(
   username: string,
   displayName: string,
   password: string,
-  role: UserRole
+  role: UserRole,
+  department: Department | null
 ): Account {
   const db = dbRuntime.getDb();
   const result = db
     .prepare(
-      "INSERT INTO accounts (username, display_name, password_hash, role) VALUES (?, ?, ?, ?)"
+      "INSERT INTO accounts (username, display_name, password_hash, role, department) VALUES (?, ?, ?, ?, ?)"
     )
-    .run(username, displayName, hashPassword(password), role);
+    .run(username, displayName, hashPassword(password), role, role === "boss" ? null : department);
 
   const row = db.prepare("SELECT * FROM accounts WHERE id = ?").get(result.lastInsertRowid);
   return toAccount(row);

@@ -1,4 +1,4 @@
-import type { UserRole } from "@shared/types";
+import type { Department, UserRole } from "@shared/types";
 
 declare global {
   interface Window {
@@ -15,13 +15,15 @@ declare global {
           username: string,
           displayName: string,
           password: string,
-          role: UserRole
+          role: UserRole,
+          department: Department | null
         ) => Promise<any>;
       };
       orders: {
         list: () => Promise<any[]>;
         create: (payload: any) => Promise<any>;
         advance: (payload: any) => Promise<any>;
+        history: (orderId: number) => Promise<any[]>;
       };
     };
   }
