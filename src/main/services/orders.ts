@@ -37,7 +37,19 @@ function toWorkflowEvent(row: any): WorkflowEvent {
 
 function getActor(actorId: number): Account {
   const db = dbRuntime.getDb();
-  const row = db.prepare("SELECT * FROM accounts WHERE id = ? AND is_active = 1").get(actorId);
+  const row = db
+    .prepare("SELECT * FROM accounts WHERE id = ? AND is_active = 1")
+    .get(actorId) as
+    | {
+        id: number;
+        username: string;
+        display_name: string;
+        role: Account["role"];
+        department: Account["department"];
+        is_active: number;
+        created_at: string;
+      }
+    | undefined;
   if (!row) {
     throw new Error("Tài khoản thao tác không hợp lệ.");
   }
@@ -190,7 +202,9 @@ export function updateOrderStatus(payload: OrderAdvancePayload): Order {
   ensureTransitionPermission(actor, payload.status);
   validateDocuments(payload);
 
-  const currentRow = db.prepare("SELECT * FROM orders WHERE id = ?").get(payload.orderId);
+  const currentRow = db.prepare("SELECT * FROM orders WHERE id = ?").get(payload.orderId) as
+    | { status: OrderStatus }
+    | undefined;
   if (!currentRow) {
     throw new Error("Không tìm thấy đơn hàng.");
   }
